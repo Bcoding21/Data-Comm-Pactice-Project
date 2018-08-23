@@ -81,47 +81,53 @@ char* readNumberAsChar(FILE** file)
 
 int main() {
 	
-	char* fileName = "file2.bin";
-	FILE* file;
-	fopen_s(&file, fileName, "rb");
+	char* inFileName = "file2.bin";
+	char* outFileName = "lol.txt";
+	FILE *inFile, *outFile;
+	fopen_s(&inFile, inFileName, "rb");
+	fopen_s(&outFile, outFileName, "w");
 
 	while (true) {
 		char type;
-		int bytesRead = fread(&type, sizeof(type), 1, file);
+		int bytesRead = fread(&type, sizeof(type), 1, inFile);
 		if (bytesRead < sizeof(type)) {
 			break;
 		}
 		if (type == 0) {
 			char amount;
-			fread(&amount, TYPE_ONE_AMOUNT_SIZE, 1, file);
+			fread(&amount, TYPE_ONE_AMOUNT_SIZE, 1, inFile);
 			printf("%d ", amount);
+			fprintf(outFile, "%d ", amount);
 			for (int i = 0; i < amount - 1; i++) {
-				uint16_t number = readTwoByteInt(&file);
+				uint16_t number = readTwoByteInt(&inFile);
 				printf("%d ", number);
+				fprintf(outFile, "%d ", number);
 			}
-			uint16_t number = readTwoByteInt(&file);
+			uint16_t number = readTwoByteInt(&inFile);
 			printf("%d\n", number);
+			fprintf(outFile, "%d\n", number);
 		}
 		else {
-			uint32_t amount = readThreeByteInt(&file);
+			uint32_t amount = readThreeByteInt(&inFile);
 			printf("%d ", amount);
+			fprintf(outFile, "%d ", amount);
 			for (int i = 0; i < amount - 1; i++) {
-				char* number = readNumberAsChar(&file);
+				char* number = readNumberAsChar(&inFile);
 				if (number != NULL) {
-					printf("%d, ", atoi(number));
+					printf("%d,", atoi(number));
+					fprintf(outFile, "%d,", atoi(number));
 				}
 				free(number);
 			}
-			char* number = readNumberAsChar(&file);
+			char* number = readNumberAsChar(&inFile);
 			if (number != NULL) {
 				printf("%d\n", atoi(number));
+				fprintf(outFile, "%d\n", atoi(number));
 				free(number);
 			}
 		}
 	}
-	fclose(file);
-
-	char a[39];
-	gets(a);
+	fclose(inFile);
+	fclose(outFile);
 
 }
