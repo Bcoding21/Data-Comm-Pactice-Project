@@ -32,28 +32,41 @@ uint32_t readThreeByteInt(FILE** file)
 {
 	unsigned char number[TYPE_TWO_AMOUNT_SIZE];
 	fread(number, TYPE_TWO_AMOUNT_SIZE, 1, *file);
-	return atoi(number);
+	return atoi(number); // convert character array to integer
 }
 
-
+/*
+One number has been succesfully read if a "," has been read
+*/
 bool hasFinishedReadingNumber(unsigned char c) {
 	return c == ',';
 }
 
-bool hasFinishedReaddingAll(unsigned char c) {
-	return  c == '\x1'||
-		c == '\0';
+/*
+	All numbers for a line have been read when
+	the next byte that deontes a type has been seen.
+	Returns whether or not character is a
+*/
+bool isTypeDenotingByte(unsigned char c) {
+	return  c == '\x1'||c == '\0';
 }
+
+/*
+	Reads at maximum 5 digits from a line. Stops when a "," is seen or
+	a byte denoting type is seen (\x1 or \0)
+	returns a pointer to a character array containing 
+	the digits for the number. Can return null.
+*/
 char* readNumberAsChar(FILE** file)
 {
 	unsigned char character;
 	int bytesRead = fread(&character, sizeof(character), 1, *file);
-	if (bytesRead < sizeof(character) || hasFinishedReadingNumber(character)) {
+	if (bytesRead < sizeof(character) || hasFinishedReadingNumber(character)) { // didnt read bytes or finsihed reading a number
 		return NULL;
 	}
 
 	unsigned char* number = malloc(sizeof(unsigned char) * MAX_NUMBER_SIZE);
-	int index = 0;
+	int index = 0; // tells us where in array we will store digit we just read.
 	number[index++] = character;
 	
 	while (true){
@@ -64,7 +77,7 @@ char* readNumberAsChar(FILE** file)
 		if (hasFinishedReadingNumber(character)) {
 			break;
 		}
-		if (hasFinishedReaddingAll(character)) {
+		if (isTypeDenotingByte(character)) {
 			fseek(*file, -1, SEEK_CUR); 
 			/* Getting a char increments file pointer by 1.
 			   The char recieved tells us if we need to stop
