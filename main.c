@@ -15,13 +15,13 @@
 */
 uint16_t readTwoByteInt(FILE** file) {
 
-	char first;
+	unsigned char first;
 	fread(&first, sizeof(first), 1, *file);
 
-	char second;
+	unsigned char second;
 	fread(&second, sizeof(second), 1, *file);
 
-	return((uint16_t)first << 8) | (uint16_t)second;
+	return(((uint32_t)first) << 8) | (uint32_t)second;
 }
 
 /*
@@ -30,17 +30,17 @@ uint16_t readTwoByteInt(FILE** file) {
 */
 uint32_t readThreeByteInt(FILE** file)
 {
-	char number[TYPE_TWO_AMOUNT_SIZE];
+	unsigned char number[TYPE_TWO_AMOUNT_SIZE];
 	fread(number, TYPE_TWO_AMOUNT_SIZE, 1, *file);
 	return atoi(number);
 }
 
 
-bool hasFinishedReadingNumber(char c) {
+bool hasFinishedReadingNumber(unsigned char c) {
 	return c == ',';
 }
 
-bool hasFinishedReaddingAll(char c) {
+bool hasFinishedReaddingAll(unsigned char c) {
 	return  c == '\x1'||
 		c == '\0';
 }
@@ -52,7 +52,7 @@ char* readNumberAsChar(FILE** file)
 		return NULL;
 	}
 
-	char* number = malloc(sizeof(char) * MAX_NUMBER_SIZE);
+	unsigned char* number = malloc(sizeof(unsigned char) * MAX_NUMBER_SIZE);
 	int index = 0;
 	number[index++] = character;
 	
@@ -79,22 +79,30 @@ char* readNumberAsChar(FILE** file)
 	return number;
 }
 
-int main() {
-	
-	char* inFileName = "file2.bin";
-	char* outFileName = "lol.txt";
-	FILE *inFile, *outFile;
-	fopen_s(&inFile, inFileName, "rb");
-	fopen_s(&outFile, outFileName, "w");
+int main(int argc, char **argv) {
+/*	if (argc != 3) {
+		printf("Need two args. %d provided", argc - 1);
+		exit(1);
+	}*/
+
+	FILE* inFile = NULL;
+	fopen_s(&inFile,"file1.bin", "rb");
+	FILE* outFile = NULL;
+	fopen_s(&outFile, "lol.txt", "w");
+
+	if (!inFile && !outFile) {
+		printf("Cannot open 1 or more files");
+		exit(1);
+	}
 
 	while (true) {
-		char type;
+		unsigned char type;
 		int bytesRead = fread(&type, sizeof(type), 1, inFile);
 		if (bytesRead < sizeof(type)) {
 			break;
 		}
 		if (type == 0) {
-			char amount;
+			unsigned char amount;
 			fread(&amount, TYPE_ONE_AMOUNT_SIZE, 1, inFile);
 			printf("%d ", amount);
 			fprintf(outFile, "%d ", amount);
@@ -112,14 +120,14 @@ int main() {
 			printf("%d ", amount);
 			fprintf(outFile, "%d ", amount);
 			for (int i = 0; i < amount - 1; i++) {
-				char* number = readNumberAsChar(&inFile);
+				unsigned char* number = readNumberAsChar(&inFile);
 				if (number != NULL) {
 					printf("%d,", atoi(number));
 					fprintf(outFile, "%d,", atoi(number));
 				}
 				free(number);
 			}
-			char* number = readNumberAsChar(&inFile);
+			unsigned char* number = readNumberAsChar(&inFile);
 			if (number != NULL) {
 				printf("%d\n", atoi(number));
 				fprintf(outFile, "%d\n", atoi(number));
