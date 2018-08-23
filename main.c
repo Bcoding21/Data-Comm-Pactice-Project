@@ -46,7 +46,7 @@ bool hasFinishedReaddingAll(unsigned char c) {
 }
 char* readNumberAsChar(FILE** file)
 {
-	char character;
+	unsigned char character;
 	int bytesRead = fread(&character, sizeof(character), 1, *file);
 	if (bytesRead < sizeof(character) || hasFinishedReadingNumber(character)) {
 		return NULL;
@@ -80,14 +80,17 @@ char* readNumberAsChar(FILE** file)
 }
 
 int main(int argc, char **argv) {
-/*	if (argc != 3) {
+	/*if (argc != 3) {
 		printf("Need two args. %d provided", argc - 1);
 		exit(1);
 	}*/
 
 	FILE* inFile = NULL;
-	fopen_s(&inFile,"file1.bin", "rb");
+	//inFile = fopen(argv[1], "rb");
+	fopen_s(&inFile, "file1.bin", "rb");
+
 	FILE* outFile = NULL;
+	//outFile = fopen(argv[2], "w");
 	fopen_s(&outFile, "lol.txt", "w");
 
 	if (!inFile && !outFile) {
