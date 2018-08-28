@@ -5,85 +5,17 @@
 
 #define TYPE_ONE_AMOUNT_SIZE 1
 #define TYPE_TWO_AMOUNT_SIZE 3
-#define MAX_NUMBER_SIZE 5
+#define MAX_DIGITS 5
 
-/*
-  Read two bytes from file and
-  returns a 16 bit integer.
-  Increments the file pointer in the
-  process.
-*/
-uint16_t readTwoByteInt(FILE** file) {
+uint16_t readTypeOneInt(FILE* file);
 
-	unsigned char first;
-	fread(&first, sizeof(first), 1, *file);
+uint32_t readTypeTwoAmount(FILE* file);
 
-	unsigned char second;
-	fread(&second, sizeof(second), 1, *file);
+bool isComma(unsigned char c);
 
-	return(((uint32_t)first) << 8) | (uint32_t)second;
-}
+bool isTypeByte(unsigned char c);
 
-/*
- Reads three bytes from the file(incrementing the file pointer)
- and converts the charactes read to a number.
-*/
-uint32_t readThreeByteInt(FILE** file)
-{
-	unsigned char number[TYPE_TWO_AMOUNT_SIZE];
-	fread(number, TYPE_TWO_AMOUNT_SIZE, 1, *file);
-	return atoi(number); // convert character array to integer
-}
-
-/*
-One number has been succesfully read if a "," has been read
-*/
-bool isComma(unsigned char c) {
-	return c == ',';
-}
-
-/*
-	All numbers for a line have been read when
-	the next byte that deontes a type has been seen.
-	Returns whether or not character is a
-*/
-bool isTypeByte(unsigned char c) {
-	return  c == '\x1'||c == '\0';
-}
-
-/*
-	Reads at maximum 5 digits from a line. Stops when a "," is seen or
-	a byte denoting type is seen (\x1 or \0)
-	returns a pointer to a character array containing 
-	the digits for the number. Can return null.
-*/
-char* readNumberAsChar(FILE** file)
-{
-	unsigned char character;
-	unsigned char* number = malloc(sizeof(unsigned char) * MAX_NUMBER_SIZE);
-	int index = 0; // tells us where in array we will store digit we just read.
-	
-	while (true){
-		int bytesRead = fread(&character, sizeof(character), 1, *file);
-		if (bytesRead < sizeof(character)) {
-			return number;
-		}
-		if (isComma(character)) {
-			break;
-		}
-		if (isTypeByte(character)) {
-			fseek(*file, -1, SEEK_CUR); 
-			/* Getting a char increments file pointer by 1.
-			   The char recieved tells us if we need to stop
-			   but we need to read that char again for the next iteration.
-				We need to decrement by 1 to be able to read again later.
-			*/
-			break;
-		}
-		number[index++] = character;
-	} 
-	return number;
-}
+int readTypeTwoInt(FILE* file);
 
 int main(int argc, char **argv) {
 	/*if (argc != 3) {
@@ -116,35 +48,110 @@ int main(int argc, char **argv) {
 			printf("%d ", amount);
 			fprintf(outFile, "%d ", amount);
 			for (int i = 0; i < amount - 1; i++) {
-				uint16_t number = readTwoByteInt(&inFile);
+				uint16_t number = readTypeOneInt(inFile);
 				printf("%d ", number);
 				fprintf(outFile, "%d ", number);
 			}
-			uint16_t number = readTwoByteInt(&inFile);
+			uint16_t number = readTypeOneInt(inFile);
 			printf("%d\n", number);
 			fprintf(outFile, "%d\n", number);
 		}
 		else {
-			uint32_t amount = readThreeByteInt(&inFile);
+			uint32_t amount = readTypeTwoAmount(inFile);
 			printf("%d ", amount);
 			fprintf(outFile, "%d ", amount);
 			for (int i = 0; i < amount - 1; i++) {
-				unsigned char* number = readNumberAsChar(&inFile);
-				if (number != NULL) {
-					printf("%d,", atoi(number));
-					fprintf(outFile, "%d,", atoi(number));
-				}
-				free(number);
+				int number = readTypeTwoInt(inFile);
+				printf("%d,", number);
+				fprintf(outFile, "%d,", number);
+				//free(number);
 			}
-			unsigned char* number = readNumberAsChar(&inFile);
-			if (number != NULL) {
-				printf("%d\n", atoi(number));
-				fprintf(outFile, "%d\n", atoi(number));
-				free(number);
-			}
+			int number = readTypeTwoInt(inFile);
+			printf("%d\n", number);
+			fprintf(outFile, "%d\n", number);
+			//free(number);
+			
 		}
 	}
 	fclose(inFile);
 	fclose(outFile);
 
+}
+
+/*
+  Read two bytes from file and
+  returns a 16 bit integer.
+  Increments the file pointer in the
+  process.
+*/
+uint16_t readTypeOneInt(FILE* file) {
+
+	unsigned char first;
+	fread(&first, sizeof(first), 1, file);
+
+	unsigned char second;
+	fread(&second, sizeof(second), 1, file);
+
+	return(((uint32_t)first) << 8) | (uint32_t)second;
+}
+
+/*
+ Reads three bytes from the file(incrementing the file pointer)
+ and converts the charactes read to a number.
+*/
+uint32_t readTypeTwoAmount(FILE* file)
+{
+	unsigned char number[TYPE_TWO_AMOUNT_SIZE];
+	fread(number, TYPE_TWO_AMOUNT_SIZE, 1, file);
+	return atoi(number); // convert character array to integer
+}
+
+/*
+One number has been succesfully read if a "," has been read
+*/
+bool isComma(unsigned char c) {
+	return c == ',';
+}
+
+/*
+	All numbers for a line have been read when
+	the next byte that deontes a type has been seen.
+	Returns whether or not character is a
+*/
+bool isTypeByte(unsigned char c) {
+	return  c == '\x1'||c == '\0';
+}
+
+/*
+	Reads at maximum 5 digits from a line. Stops when a "," is seen or
+	a byte denoting type is seen (\x1 or \0)
+	returns a pointer to a character array containing 
+	the digits for the number. Can return null.
+*/
+int readTypeTwoInt(FILE* file)
+{
+	unsigned char character;
+	unsigned char* number = malloc(sizeof(unsigned char) * MAX_DIGITS);
+	int index = 0; // tells us where in array we will store digit we just read.
+	
+	while (true) {
+		int bytesRead = fread(&character, sizeof(character), 1, file);
+		if (bytesRead < sizeof(character)) {
+			return atoi(number);
+		}
+		if (isComma(character)) {
+			break;
+		}
+		if (isTypeByte(character)) {
+			fseek(file, -1, SEEK_CUR); 
+			/* Getting a char increments file pointer by 1.
+			   The char recieved tells us if we need to stop
+			   but we need to read that char again for the next iteration.
+				We need to decrement by 1 to be able to read again later.
+			*/
+			break;
+		}
+		number[index++] = character;
+	} 
+	return atoi(number);
 }
