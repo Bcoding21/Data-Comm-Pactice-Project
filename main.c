@@ -18,7 +18,7 @@ uint16_t readAsciiAsInt16(FILE*);
 
 bool finishedReadingNumber(FILE*);
 
-bool isType(char);
+bool isType(uint8_t);
 
 
 int main(int argc, char **argv) {
@@ -41,9 +41,9 @@ int main(int argc, char **argv) {
 	}
 
 	while (!feof(inFile)) {
-		unsigned char type = fgetc(inFile);
+		uint8_t type = fgetc(inFile);
 		if (type == TYPE_ONE) {
-			unsigned char amount = fgetc(inFile);
+			uint8_t amount = fgetc(inFile);
 			printf("%d ", amount);
 			fprintf(outFile, "%d ", amount);
 			for (int i = 0; i < amount - 1; i++) {
@@ -80,9 +80,9 @@ Increments the file pointer in the
 process.
 */
 uint16_t readBytesAsInt16(FILE* file) {
-	unsigned char first = fgetc(file);
-	unsigned char second = fgetc(file);
-	return  ( ( (uint16_t) first ) << 8) | (uint16_t)second;
+	uint16_t greaterBits = fgetc(file);
+	uint8_t lowerBits = fgetc(file);
+	return (greaterBits << 8) | lowerBits;
 }
 
 /*
@@ -132,6 +132,6 @@ bool finishedReadingNumber(FILE* file) {
 }
 
 
-bool isType(char c) {
-	return c == '\0' || c == '\x1';
+bool isType(uint8_t byte) {
+	return byte == '\0' || byte == '\x1';
 }
